@@ -8,20 +8,37 @@ from app.schemas.document import DocumentRead,DocumentListResponse
 from app.services.document import DocumentService
 from uuid import UUID
 
+from fastapi import BackgroundTasks
+from app.services.document_processor import DocumentProcessorService
+
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
-@router.post("/upload", response_model=DocumentRead)
+@router.post("/upload")
 async def upload_document(
-    file: UploadFile = File(...),
-    user: User = Depends(current_active_user),
+    file: UploadFile,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(current_active_user),
 ):
-    return await DocumentService.upload_document(
+    document = await DocumentService.upload_document(
         file=file,
         user=user,
         db=db,
     )
+
+    background_tasks.add_task(
+        DocumentProcessorService.process_document,
+        document.id,
+        document.file_path,
+    )
+
+    return {
+        "id": document.id,
+        "filename": document.filename,
+        "status": document.status,
+        "message": "Document uploaded. OCR processing started.",
+    }
 
 # THIS route will depend upon the upload document function in the document service class whixh is present in the services folder in document.py which help to create the document detail like its filename, file path and create document object and then pass ot to another function create which is present in document.py in repositories which actually take this object and store it into the database. 
 #===================

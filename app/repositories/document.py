@@ -72,3 +72,17 @@ class DocumentRepository:
 
         await db.delete(document)
         await db.commit()
+
+
+    @staticmethod
+    async def update_status(
+        db: AsyncSession,
+        document: Document,
+        status: str,
+    ) -> Document:
+        document.status = status
+
+        await db.commit()
+        await db.refresh(document)
+
+        return document

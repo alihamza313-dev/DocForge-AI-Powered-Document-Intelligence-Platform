@@ -7,10 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.document import Document
 from app.repositories.document import DocumentRepository
-from app.models.user import User
-
-from app.services.ocr import OCRService
 from app.repositories.docs_content import DocumentContentRepository
+from app.models.user import User
 
 from app.schemas.document import DocumentDetailResponse,DocumentListResponse
 
@@ -51,17 +49,13 @@ class DocumentService:
             user_id=user.id,
         )
 
-        extracted_text = await OCRService.extract_text(file_path)
-        print(type(extracted_text))
-        print(extracted_text)
-        await DocumentContentRepository.create(
-            db = db,
-            document_id = document.id,
-            extracted_text = extracted_text
-        )
-
         return document
     
+#     aiofiles
+# Used for asynchronous file I/O.
+# Built-in open() is synchronous and blocks the event loop.
+# aiofiles.open() allows other async tasks to run while waiting for file operations.
+# Use aiofiles inside async def when reading or writing files in asynchronous applications (e.g., FastAPI).
 #=============================
     @staticmethod
     async def get_document(
